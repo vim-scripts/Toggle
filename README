@@ -1,0 +1,22 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=895
+
+In this version, the script can toggle:
+    true     <->     false
+    on       <->     off
+    yes      <->     no
+    define  <->     undef
+    +        <->     -
+    >        <->     <
+    &&    <->     ||
+    &     <->      |
+    positive and negative numbers
+
+Move the cursor on the word/char/number to be toggled and press
+      <C-T>  in insert mode 
+or
+      +     in normal / insert mode.
+
+This shortcut can be modified in the script file - of course...
+
+If the cursor is positioned on a number, the script looks for a corresponding + or - sign for that number. 
+If it's found, it will be replaced by the other one. If none is found, a - sign is inserted before the number.
