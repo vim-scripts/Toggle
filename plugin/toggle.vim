@@ -1,9 +1,10 @@
 " Vim Toggle Plugin
 "
-" Author: Timo Teifel, 
+" Author: Timo Teifel
 " Email: timo at teifel-net dot de
-" Version: 0.2
-" Date: 03 Feb 2004
+" Version: 0.3
+" Date: 06 Feb 2004
+" Licence: GPL v2.0
 "
 " Usage:
 " Drop into your plugin directory, Pressing Control-Shift-T toggles
@@ -14,6 +15,7 @@
 "  yes      <->     no
 "  +        <->     -
 "  >        <->     <
+"  define   <->     undef
 "
 "  If cursor is positioned on a number, the function looks for a + 
 "  or - sign in front of that number and toggels it. If the number
@@ -22,13 +24,20 @@
 "  On unknown values, nothing happens.
 "
 " Thanks: 
-"   Christoph Behle, who inspired me to write this
-"   the Vim Documentation ;)
+" - Christoph Behle, who inspired me to write this
+" - the Vim Documentation ;)
 "
 " Todo:
-" - doesn't work in visual Mode (necessary?)
+" - visual mode is cancelled when pressing <C-T> so that
+"   the function works... is there something better to do
+"   in visual mode?
 "
 " Changelog:
+" v0.3, 6 Feb 2004
+"   - I realised that <S-C-T> ignores the Shift Key. I couldn't
+"     find a way to use <S-C-T> and now I use <C-T>
+"   - added words: define/undef
+"   - when in visual mode, send <ESC> so that the function works
 " v0.2, 3 Feb 2004
 "   - added number and sign support
 "   - fixed end-of-line bug
@@ -43,8 +52,18 @@ let loaded_toggle=1
 let s:save_cpo = &cpo
 set cpo&vim
 
-imap <S-C-T> <C-O>:call Toggle()<CR>
-nmap <S-C-T> :call Toggle()<CR>
+imap <C-T> <C-O>:call Toggle()<CR>
+nmap <C-T> :call Toggle()<CR>
+vmap <C-T> <ESC>:call Toggle()<CR>
+
+"--------------------------------------------------
+" If you don't want to break the standard <C-T> assignments,
+" you could use these, or of course define your own ones...
+"
+" imap <C-M-T> <C-O>:call Toggle()<CR>
+" nmap <C-M-T> :call Toggle()<CR>
+" vmap <C-M-T> <ESC>:call Toggle()<CR>
+"-------------------------------------------------- 
 
 " some Helper functions {{{
 function! s:Toggle_changeChar(string, pos, char)
@@ -60,7 +79,7 @@ function! s:Toggle_changeString(string, beginPos, endPos, newString)
 endfunction
 " }}}
 
-function! Toggle()
+function! Toggle() "{{{
     " save values which we have to change temporarily:
     let s:lineNo = line(".")
     let s:columnNo = col(".")
@@ -129,9 +148,7 @@ function! Toggle()
         endif " is a number under the cursor?
     endif " toggleDone?}}}
 
-    " 3. Check if complete word can be toggled{{{
-    "       get (delete) word unter cursor:
-    "       (b)ack to start of word, (d)elete till (e)nd of word
+    " 3. Check if complete word can be toggled {{{
     if (s:toggleDone == 0)
         
         " find beginning of word {{{
@@ -178,8 +195,16 @@ function! Toggle()
         elseif (s:wordUnderCursor == "no")
             let s:wordUnderCursor = "yes"
             let s:toggleDone = 1
+
+        elseif (s:wordUnderCursor == "define")
+            let s:wordUnderCursor = "undef"
+            let s:toggleDone = 1
+        elseif (s:wordUnderCursor == "undef")
+            let s:wordUnderCursor = "define"
+            let s:toggleDone = 1
         endif
 
+        " if wordUnderCursor is changed, set the new line
         if (s:toggleDone == 1)
             let s:ncline = s:Toggle_changeString(s:cline, s:startOfWord, s:endOfWord-1, s:wordUnderCursor)
             call setline(s:lineNo, s:ncline)
@@ -189,7 +214,7 @@ function! Toggle()
     
     "restore saved values
     call cursor(s:lineNo,s:columnNo)
-endfunction
+endfunction " }}}
 
 let &cpo = s:save_cpo
 " vim:fdm=marker commentstring="%s
