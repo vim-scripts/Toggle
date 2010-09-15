@@ -7,8 +7,10 @@
 " Licence: GPL v2.0
 "
 " Usage:
-" Drop into your plugin directory, Pressing Control-Shift-T toggles
-" value under cursor. Currently known values are:
+" Drop into your plugin directory, Pressing Control-T toggles
+" value under cursor in insert-mode. In normal/visual mode,
+" the + key toggles the value under the cursor.
+" Currently known values are:
 " 
 "  true     <->     false
 "  on       <->     off
@@ -27,6 +29,7 @@
 "
 " Thanks: 
 " - Christoph Behle, who inspired me to write this
+" - Jan Christoph Ebersbach, for the 'keep case' patch
 " - the Vim Documentation ;)
 "
 " Todo:
@@ -35,6 +38,9 @@
 "   in visual mode?
 "
 " Changelog:
+" v 0.5, 15 September 2010
+"   - case insensitive toggling, keep case
+"   - Bugfix for && and ||
 " v 0.4, 14 September 2010
 "   - default mapping uses + in normal and visual mode instead 
 "     of <C-T>
@@ -160,74 +166,81 @@ function! Toggle() "{{{
             endif
         endif " is a number under the cursor?
     endif " toggleDone?}}}
+    
+    " 3. Check if cursor is on one-or two-character symbol"{{{
+    if s:toggleDone == 0
+      let s:nextChar = strpart(s:cline, s:columnNo, 1)
+      let s:prevChar = strpart(s:cline, s:columnNo-2, 1)
+      if s:charUnderCursor == "|"
+        if s:prevChar == "|"
+          execute "normal r&hr&"
+          let s:toggleDone = 1
+        elseif s:nextChar == "|"
+          execute "normal r&lr&"
+          let s:toggleDone = 1
+        else
+          execute "normal r&"
+          let s:toggleDone = 1
+        end
+      end
 
-    " 3. Check if complete word can be toggled {{{
+      if s:charUnderCursor == "&"
+        if s:prevChar == "&"
+          execute "normal r|hr|"
+          let s:toggleDone = 1
+        elseif s:nextChar == "&"
+          execute "normal r|lr|"
+          let s:toggleDone = 1
+        else
+          execute "normal r|"
+          let s:toggleDone = 1
+        end
+      end
+    endif"}}}
+
+    " 4. Check if complete word can be toggled {{{
     if (s:toggleDone == 0)
-        let s:wordUnderCursor =  expand("<cword>")
-        if (s:wordUnderCursor == "true")
-            let s:wordUnderCursor = "false"
+        let s:wordUnderCursor_tmp = ''
+"                 
+        let s:wordUnderCursor = expand("<cword>")
+        if (s:wordUnderCursor ==? "true")
+            let s:wordUnderCursor_tmp = "false"
             let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "false")
-            let s:wordUnderCursor = "true"
-            let s:toggleDone = 1
-
-        elseif (s:wordUnderCursor == "TRUE")
-            let s:wordUnderCursor = "FALSE"
-            let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "FALSE")
-            let s:wordUnderCursor = "TRUE"
+        elseif (s:wordUnderCursor ==? "false")
+            let s:wordUnderCursor_tmp = "true"
             let s:toggleDone = 1
 
-        elseif (s:wordUnderCursor == "on")
-            let s:wordUnderCursor = "off"
+        elseif (s:wordUnderCursor ==? "on")
+            let s:wordUnderCursor_tmp = "off"
             let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "off")
-            let s:wordUnderCursor = "on"
-            let s:toggleDone = 1
-
-        elseif (s:wordUnderCursor == "ON")
-            let s:wordUnderCursor = "OFF"
-            let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "OFF")
-            let s:wordUnderCursor = "ON"
+        elseif (s:wordUnderCursor ==? "off")
+            let s:wordUnderCursor_tmp = "on"
             let s:toggleDone = 1
 
-        elseif (s:wordUnderCursor == "yes")
-            let s:wordUnderCursor = "no"
+        elseif (s:wordUnderCursor ==? "yes")
+            let s:wordUnderCursor_tmp = "no"
             let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "no")
-            let s:wordUnderCursor = "yes"
+        elseif (s:wordUnderCursor ==? "no")
+            let s:wordUnderCursor_tmp = "yes"
             let s:toggleDone = 1
-
-        elseif (s:wordUnderCursor == "YES")
-            let s:wordUnderCursor = "NO"
+        elseif (s:wordUnderCursor ==? "define")
+            let s:wordUnderCursor_tmp = "undef"
             let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "NO")
-            let s:wordUnderCursor = "YES"
+        elseif (s:wordUnderCursor ==? "undef")
+            let s:wordUnderCursor_tmp = "define"
             let s:toggleDone = 1
-
-        elseif (s:wordUnderCursor == "define")
-            let s:wordUnderCursor = "undef"
-            let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "undef")
-            let s:wordUnderCursor = "define"
-            let s:toggleDone = 1
-
-        elseif (s:wordUnderCursor == "||")
-            let s:wordUnderCursor = "&&"
-            let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "&&")
-            let s:wordUnderCursor = "||"
-            let s:toggleDone = 1
-
-        elseif (s:wordUnderCursor == "|")
-            let s:wordUnderCursor = "&"
-            let s:toggleDone = 1
-        elseif (s:wordUnderCursor == "&")
-            let s:wordUnderCursor = "|"
-            let s:toggleDone = 1
-
         endif
+
+         " preserve case (provided by Jan Christoph Ebersbach)
+         if s:toggleDone
+             if strpart (s:wordUnderCursor, 0) =~ '^\u*$'
+                 let s:wordUnderCursor = toupper (s:wordUnderCursor_tmp)
+             elseif strpart (s:wordUnderCursor, 0, 1) =~ '^\u$'
+                 let s:wordUnderCursor = toupper (strpart (s:wordUnderCursor_tmp, 0, 1)).strpart (s:wordUnderCursor_tmp, 1)
+             else
+                 let s:wordUnderCursor = s:wordUnderCursor_tmp
+             endif
+         endif
 
         " if wordUnderCursor is changed, set the new line
         if (s:toggleDone == 1)
@@ -236,7 +249,7 @@ function! Toggle() "{{{
         endif
 
     endif " toggleDone?}}}
-    
+
     if s:toggleDone == 0
       echohl WarningMsg
       echo "Can't toggle word under cursor, word is not in list." 
