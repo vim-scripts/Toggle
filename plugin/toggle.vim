@@ -209,6 +209,14 @@ function! Toggle() "{{{
         elseif (s:wordUnderCursor ==? "false")
             let s:wordUnderCursor_tmp = "true"
             let s:toggleDone = 1
+       
+       " added Python True/False (provided by Christian Tabedzki)
+        elseif (s:wordUnderCursor ==? "True")
+            let s:wordUnderCursor_tmp = "False"
+            let s:toggleDone = 1
+        elseif (s:wordUnderCursor ==? "false")
+            let s:wordUnderCursor_tmp = "true"
+            let s:toggleDone = 1            
 
         elseif (s:wordUnderCursor ==? "on")
             let s:wordUnderCursor_tmp = "off"
