@@ -1,6 +1,7 @@
 This is a mirror of http://www.vim.org/scripts/script.php?script_id=895
 
 In this version, the script can toggle:
+    True     <->     False
     true     <->     false
     on       <->     off
     yes      <->     no
