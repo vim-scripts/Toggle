@@ -12,6 +12,7 @@
 " the + key toggles the value under the cursor.
 " Currently known values are:
 " 
+"  True     <->     False
 "  true     <->     false
 "  on       <->     off
 "  yes      <->     no
@@ -214,8 +215,8 @@ function! Toggle() "{{{
         elseif (s:wordUnderCursor ==? "True")
             let s:wordUnderCursor_tmp = "False"
             let s:toggleDone = 1
-        elseif (s:wordUnderCursor ==? "false")
-            let s:wordUnderCursor_tmp = "true"
+        elseif (s:wordUnderCursor ==? "False")
+            let s:wordUnderCursor_tmp = "True"
             let s:toggleDone = 1            
 
         elseif (s:wordUnderCursor ==? "on")
